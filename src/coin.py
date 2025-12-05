@@ -183,12 +183,20 @@ class Coin:
             bounce = math.sin(t * math.pi) * 30
             y = int(self.base_y - bounce)
 
+            # Alternate between heads and tails during flip based on rotation phase
+            # When scale_x is decreasing (coin turning edge-on), switch the visible side
+            rotation_phase = (t * math.pi * 4) % (2 * math.pi)
+            show_heads = rotation_phase < math.pi
+
+            # Choose sprite based on rotation phase during flip, not final result
+            flip_sprite = self.heads_sprite if show_heads else self.tails_sprite
+
             # Scale the sprite horizontally for 3D flip effect
-            scaled_width = int(current_sprite.get_width() * scale_x)
-            scaled_height = current_sprite.get_height()
+            scaled_width = int(flip_sprite.get_width() * scale_x)
+            scaled_height = flip_sprite.get_height()
 
             scaled_sprite = pygame.transform.scale(
-                current_sprite, (scaled_width, scaled_height)
+                flip_sprite, (scaled_width, scaled_height)
             )
 
             # Center the scaled sprite
