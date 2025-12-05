@@ -29,7 +29,7 @@ class CoinFlipApp:
     COIN_EDGE = (180, 150, 30)
     TEXT_COLOR = (10, 10, 10)
     FPS = 60
-    NUM_COINS = 5
+    NUM_COINS = 6
 
     def __init__(self, use_simulator=None):
         """
