@@ -7,6 +7,7 @@ This module contains the Coin class that handles coin flip animations.
 import pygame
 import random
 import math
+import os
 
 
 class Coin:
@@ -53,11 +54,40 @@ class Coin:
         self.text_color = text_color
         self.font = font if font else pygame.font.SysFont(None, 48)
 
+        # Load coin sprites
+        self._load_sprites()
+
         # Animation state - start in static mode showing Heads
         self.state = "static"  # Can be: "static", "waiting", "final_flip", "done"
         self.frame = 0
         self.flip_duration = 0
         self.result = "H"  # Start with Heads
+
+    def _load_sprites(self):
+        """
+        Load the coin sprite images from the assets directory.
+
+        :return: None
+        :rtype: None
+        """
+        try:
+            # Load the sprite images
+            heads_path = os.path.join("assets", "goldcoin-heads.png")
+            tails_path = os.path.join("assets", "goldcoin-tails.png")
+
+            self.heads_sprite = pygame.image.load(heads_path)
+            self.tails_sprite = pygame.image.load(tails_path)
+
+            # Scale sprites to fit the coin radius (diameter = radius * 2)
+            size = self.radius * 2
+            self.heads_sprite = pygame.transform.scale(self.heads_sprite, (size, size))
+            self.tails_sprite = pygame.transform.scale(self.tails_sprite, (size, size))
+
+        except pygame.error as e:
+            print(f"Warning: Could not load coin sprites: {e}")
+            # Fallback to None - will use programmatic drawing
+            self.heads_sprite = None
+            self.tails_sprite = None
 
     def flip(self):
         """
@@ -125,8 +155,54 @@ class Coin:
         Draw the coin on the given surface.
 
         Renders the coin differently based on its current state:
-        - static/done: Full coin with H or T letter
-        - waiting/final_flip: Animated 3D flip effect with squashing/stretching
+        - static/done: Full coin sprite with H or T
+        - waiting/final_flip: Animated 3D flip effect with sprite scaling
+
+        :param surface: The pygame surface to draw on
+        :type surface: pygame.Surface
+        :return: None
+        :rtype: None
+        """
+        # Choose the appropriate sprite based on result
+        current_sprite = self.heads_sprite if self.result == "H" else self.tails_sprite
+
+        # Fallback to programmatic drawing if sprites failed to load
+        if current_sprite is None:
+            self._draw_programmatic(surface)
+            return
+
+        # While flipping (waiting or final), create 3D effect by scaling width
+        if self.state == "waiting" or self.state == "final_flip":
+            t = self.frame / self.flip_duration
+
+            # Width oscillates like |cos| to mimic edge-on view during flip
+            scale_x = abs(math.cos(t * math.pi * 4))
+            scale_x = max(0.1, scale_x)  # Minimum width to keep visible
+
+            # Bounce vertically
+            bounce = math.sin(t * math.pi) * 30
+            y = int(self.base_y - bounce)
+
+            # Scale the sprite horizontally for 3D flip effect
+            scaled_width = int(current_sprite.get_width() * scale_x)
+            scaled_height = current_sprite.get_height()
+
+            scaled_sprite = pygame.transform.scale(
+                current_sprite, (scaled_width, scaled_height)
+            )
+
+            # Center the scaled sprite
+            sprite_rect = scaled_sprite.get_rect(center=(self.x, y))
+            surface.blit(scaled_sprite, sprite_rect)
+
+        else:  # state == "static" or "done"
+            # Draw the full sprite
+            sprite_rect = current_sprite.get_rect(center=(self.x, self.base_y))
+            surface.blit(current_sprite, sprite_rect)
+
+    def _draw_programmatic(self, surface):
+        """
+        Fallback method to draw coin programmatically if sprites aren't available.
 
         :param surface: The pygame surface to draw on
         :type surface: pygame.Surface
