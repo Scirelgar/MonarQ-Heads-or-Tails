@@ -23,7 +23,7 @@ class Coin:
         y,
         radius=40,
         coin_color=(240, 200, 50),
-        coin_edge=(180, 150, 30),
+        coin_edge_color=(180, 150, 30),
         text_color=(10, 10, 10),
         font=None,
     ):
@@ -38,8 +38,8 @@ class Coin:
         :type radius: int, optional
         :param coin_color: RGB color tuple for the coin face, defaults to (240, 200, 50)
         :type coin_color: tuple, optional
-        :param coin_edge: RGB color tuple for the coin edge, defaults to (180, 150, 30)
-        :type coin_edge: tuple, optional
+        :param coin_edge_color: RGB color tuple for the coin edge, defaults to (180, 150, 30)
+        :type coin_edge_color: tuple, optional
         :param text_color: RGB color tuple for the H/T text, defaults to (10, 10, 10)
         :type text_color: tuple, optional
         :param font: Pygame font object for rendering text
@@ -49,7 +49,7 @@ class Coin:
         self.base_y = y
         self.radius = radius
         self.coin_color = coin_color
-        self.coin_edge = coin_edge
+        self.coin_edge = coin_edge_color
         self.text_color = text_color
         self.font = font if font else pygame.font.SysFont(None, 48)
 
