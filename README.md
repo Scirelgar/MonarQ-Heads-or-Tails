@@ -23,8 +23,16 @@ As it stands, the animations relied heavily on the assistance of generative AI t
     ```bash
     pip install -r requirements.txt
     ```
+   
+3. To use the real hardware, ensure you have access to Calcul Québec's quantum computing platform. You then have to write you credentials in a `.env` file at the root of the project with the following format:
 
-3. Run the application:
+   ```env
+   HOST='https://the.host.url'
+   USER='username'
+   ACCESS_TOKEN='your_access_token'
+   ```
+
+4. Run the application:
 
     ```bash
     python src/main.py
