@@ -20,10 +20,10 @@ class CoinFlipApp:
     """
 
     # Configuration constants
-    WINDOW_WIDTH = 800
-    CIRCUIT_SECTION_HEIGHT = 800
-    COIN_SECTION_HEIGHT = 300
-    WINDOW_HEIGHT = CIRCUIT_SECTION_HEIGHT + COIN_SECTION_HEIGHT
+    CIRCUIT_SECTION_WIDTH = 800
+    COIN_SECTION_WIDTH = 800
+    WINDOW_WIDTH = CIRCUIT_SECTION_WIDTH + COIN_SECTION_WIDTH
+    WINDOW_HEIGHT = CIRCUIT_SECTION_WIDTH
     BACKGROUND_COLOR = (30, 30, 40)
     COIN_COLOR = (240, 200, 50)
     COIN_EDGE_COLOR = (180, 150, 30)
@@ -97,7 +97,7 @@ class CoinFlipApp:
             scale_factor = (
                 min(
                     self.WINDOW_WIDTH / img_width,
-                    self.CIRCUIT_SECTION_HEIGHT / img_height,
+                    self.CIRCUIT_SECTION_WIDTH / img_height,
                 )
                 * 0.9
             )  # 90% to leave some padding
@@ -139,15 +139,41 @@ class CoinFlipApp:
         """
         Create and position all coins for the game.
 
+        Arranges coins in a grid layout within the right section of the window,
+        with a maximum of 6 coins per row and uniform spacing.
+
         Returns:
-            list: A list of Coin objects positioned across the screen.
+            list: A list of Coin objects positioned in a grid layout.
         """
         coins = []
-        spacing = self.WINDOW_WIDTH // (self.NUM_COINS + 1)
-        # Position coins in the bottom section
-        y = self.CIRCUIT_SECTION_HEIGHT + (self.COIN_SECTION_HEIGHT // 2)
+        max_coins_per_row = 6
+
+        # Calculate number of rows needed
+        num_rows = (self.NUM_COINS + max_coins_per_row - 1) // max_coins_per_row
+
+        # Calculate spacing for the coin section (right half of the window)
+        coin_section_x_start = self.CIRCUIT_SECTION_WIDTH
+        coin_section_width = self.COIN_SECTION_WIDTH
+        coin_section_height = self.WINDOW_HEIGHT
+
         for i in range(self.NUM_COINS):
-            x = spacing * (i + 1)
+            # Calculate row and column for current coin
+            row = i // max_coins_per_row
+            col = i % max_coins_per_row
+
+            # Calculate number of coins in current row
+            coins_in_current_row = min(
+                max_coins_per_row, self.NUM_COINS - row * max_coins_per_row
+            )
+
+            # Calculate horizontal position with uniform spacing
+            horizontal_spacing = coin_section_width // (coins_in_current_row + 1)
+            x = coin_section_x_start + horizontal_spacing * (col + 1)
+
+            # Calculate vertical position with uniform spacing
+            vertical_spacing = coin_section_height // (num_rows + 1)
+            y = vertical_spacing * (row + 1)
+
             coins.append(
                 Coin(
                     x,
@@ -220,22 +246,22 @@ class CoinFlipApp:
         pygame.draw.rect(
             self.screen,
             circuit_bg_color,
-            (0, 0, self.WINDOW_WIDTH, self.CIRCUIT_SECTION_HEIGHT),
+            (0, 0, self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT),
         )
 
         # Draw separator line
         pygame.draw.line(
             self.screen,
             (100, 100, 120),
-            (0, self.CIRCUIT_SECTION_HEIGHT),
-            (self.WINDOW_WIDTH, self.CIRCUIT_SECTION_HEIGHT),
+            (self.CIRCUIT_SECTION_WIDTH, 0),
+            (self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT),
             2,
         )
 
         # Draw circuit diagram if available
         if self.circuit_surface:
             circuit_rect = self.circuit_surface.get_rect(
-                center=(self.WINDOW_WIDTH // 2, self.CIRCUIT_SECTION_HEIGHT // 2)
+                center=(self.CIRCUIT_SECTION_WIDTH // 2, self.WINDOW_HEIGHT // 2)
             )
             self.screen.blit(self.circuit_surface, circuit_rect)
 
@@ -243,7 +269,7 @@ class CoinFlipApp:
         status_surf = self.status_font.render(
             self.status_message, True, (200, 200, 220)
         )
-        status_rect = status_surf.get_rect(center=(self.WINDOW_WIDTH // 2, 20))
+        status_rect = status_surf.get_rect(center=(self.CIRCUIT_SECTION_WIDTH // 2, 20))
         self.screen.blit(status_surf, status_rect)
 
         # Draw all coins
@@ -254,7 +280,7 @@ class CoinFlipApp:
         hint = "Press SPACE to flip coins"
         hint_surf = self.hint_font.render(hint, True, (200, 200, 220))
         hint_rect = hint_surf.get_rect(
-            center=(self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT - 20)
+            center=(self.CIRCUIT_SECTION_WIDTH // 2, self.WINDOW_HEIGHT - 20)
         )
         self.screen.blit(hint_surf, hint_rect)
 
