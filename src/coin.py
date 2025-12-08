@@ -73,7 +73,7 @@ class Coin:
         try:
             # Load the sprite images
             heads_path = os.path.join("assets", "goldcoin-heads.png")
-            tails_path = os.path.join("assets", "goldcoin-tails.png")
+            tails_path = os.path.join("assets", "silvercoin-tails.png")
 
             self.heads_sprite = pygame.image.load(heads_path)
             self.tails_sprite = pygame.image.load(tails_path)
