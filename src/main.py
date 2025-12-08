@@ -49,6 +49,13 @@ class CoinFlipApp:
         total_height = self.WINDOW_HEIGHT + self.MENU_HEIGHT
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, total_height))
         pygame.display.set_caption("MonarQ Quantum Coin Flips")
+
+        # Set application icon
+        try:
+            icon = pygame.image.load("assets/monarq-icon.ico")
+            pygame.display.set_icon(icon)
+        except Exception as e:
+            logger.warning(f"Could not load application icon: {e}")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 48)
         self.hint_font = pygame.font.SysFont(None, 28)
