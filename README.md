@@ -2,6 +2,8 @@
 
 MonarQ-Heads-or-Tails is a simple technology demonstration project showcasing a quantum coin flip using MonarQ, Calcul Québec's quantum computing platform.
 
+![MonarQ-Heads-or-Tails](docs/project_screenshot.png)
+
 ## Overview
 
 This project executes and animate a quantum coin flip using Pennylane-CalculQuebec and Pygame.
