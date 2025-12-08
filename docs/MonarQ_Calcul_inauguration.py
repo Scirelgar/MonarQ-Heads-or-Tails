@@ -17,7 +17,12 @@ sim = os.getenv("SIM_BOOL")
 num_wires = 5
 num_shots = 1
 
-client = CalculQuebecClient(host=HOST_ENV, user=USER_ENV, access_token=ACCESS_TOKEN_ENV, project_id="default")
+client = CalculQuebecClient(
+    host=HOST_ENV,
+    user=USER_ENV,
+    access_token=ACCESS_TOKEN_ENV,
+    project_id="default",
+)
 
 # Define the device
 print("Chargement de l'appareil...")
@@ -31,12 +36,14 @@ dev_sim = qml.device("default.qubit", wires=num_wires)
 
 print("Création du circuit...")
 
+
 @qml.set_shots(num_shots)
 @qml.qnode(dev_sf)
 def circuit():
     for i in range(num_wires):
         qml.Hadamard(wires=i)
     return qml.counts()
+
 
 @qml.set_shots(num_shots)
 @qml.qnode(dev_sim)
