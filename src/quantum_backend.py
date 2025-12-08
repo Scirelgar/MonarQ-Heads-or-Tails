@@ -162,7 +162,10 @@ class QuantumCoinFlipper:
             # Execute the circuit
             result_states_list = list(self.circuit_func())
             execution_result = str(result_states_list[0])
-            all_results.append(execution_result)
+            if execution_result is not None:
+                logger.info(f"Execution {execution + 1}/{num_executions} done. Result {execution_result}")
+                all_results.append(execution_result)
+
 
             # Add small delay between executions for real devices
             if self.current_device_name != "default.qubit" and num_executions > 1:
@@ -269,6 +272,6 @@ class QuantumCoinFlipper:
         if self.circuit_fig is not None:
             plt.close(self.circuit_fig)
             self.circuit_fig = None
-
+        logger.info(f"Changing device to {self.current_device_name}. Num coins: {self.num_coins}, Executions: {self.num_executions}")
         # Reinitialize with new device
         return self.initialize_device()
