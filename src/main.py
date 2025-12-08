@@ -10,6 +10,12 @@ import io
 import threading
 from coin import Coin
 from quantum_backend import QuantumCoinFlipper
+from menu_bar import MenuBar
+
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 
 class CoinFlipApp:
@@ -24,25 +30,24 @@ class CoinFlipApp:
     COIN_SECTION_WIDTH = 800
     WINDOW_WIDTH = CIRCUIT_SECTION_WIDTH + COIN_SECTION_WIDTH
     WINDOW_HEIGHT = CIRCUIT_SECTION_WIDTH
+    MENU_HEIGHT = 30
     BACKGROUND_COLOR = (30, 30, 40)
     COIN_COLOR = (240, 200, 50)
     COIN_EDGE_COLOR = (180, 150, 30)
     TEXT_COLOR = (10, 10, 10)
     FPS = 60
-    NUM_COINS = 6
 
-    def __init__(self, use_simulator=None):
+    def __init__(self):
         """
         Initialize the coin flip application.
 
         Sets up pygame, creates the window, fonts, initializes quantum backend, and coins.
-
-        :param use_simulator: Whether to use quantum simulator instead of real device.
-                             If None, reads from SIM_BOOL environment variable.
-        :type use_simulator: bool or None
+        The number of coins is determined by the quantum device.
         """
         pygame.init()
-        self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
+        # Add menu height to total window height
+        total_height = self.WINDOW_HEIGHT + self.MENU_HEIGHT
+        self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, total_height))
         pygame.display.set_caption("MonarQ Quantum Coin Flips")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 48)
@@ -50,10 +55,12 @@ class CoinFlipApp:
         self.status_font = pygame.font.SysFont(None, 24)
         self.running = True
 
-        # Initialize quantum backend (reads from .env if use_simulator is None)
-        self.quantum_flipper = QuantumCoinFlipper(
-            num_coins=self.NUM_COINS, use_simulator=use_simulator
-        )
+        # Initialize menu bar
+        self.menu_bar = MenuBar(self.WINDOW_WIDTH, self.MENU_HEIGHT)
+        self.current_device = "MonarQ"  # Track current device selection
+
+        # Initialize quantum backend (defaults to simulator if device_name is None)
+        self.quantum_flipper = QuantumCoinFlipper()
 
         # Status message
         self.status_message = "Loading quantum device..."
@@ -66,7 +73,7 @@ class CoinFlipApp:
         # Generate circuit diagram
         self._generate_circuit_surface()
 
-        self.coins = self._create_coins()
+        self.coins = self._create_coins(self.quantum_flipper.num_coins)
 
         # Quantum execution state
         self.quantum_executing = False
@@ -108,7 +115,7 @@ class CoinFlipApp:
             self.circuit_surface = pygame.transform.scale(
                 circuit_img, (new_width, new_height)
             )
-            self.status_message = "Quantum circuit ready!"
+            # self.status_message = "Quantum circuit ready!"
 
         except Exception as e:
             self.status_message = f"Error generating circuit: {str(e)}"
@@ -135,44 +142,71 @@ class CoinFlipApp:
             self.quantum_results_ready = False
             self.quantum_executing = False
 
-    def _create_coins(self):
+    def _start_quantum_flip(self):
+        """
+        Start the quantum coin flip process.
+
+        Initiates coin animations and starts quantum circuit execution in a background thread.
+        Only starts if not already executing to prevent multiple concurrent executions.
+        """
+        if self.current_device == "MonarQ":
+            return
+
+        # Only start if not already executing
+        if not self.quantum_executing:
+            # Start coins bouncing
+            for coin in self.coins:
+                coin.flip()
+
+            # Start quantum circuit execution in background thread
+            self.quantum_executing = True
+            self.quantum_results_ready = False
+            self.quantum_results = None
+            self.quantum_thread = threading.Thread(
+                target=self._execute_quantum_circuit_thread, daemon=True
+            )
+            self.quantum_thread.start()
+
+    def _create_coins(self, num_coins):
         """
         Create and position all coins for the game.
 
         Arranges coins in a grid layout within the right section of the window,
         with a maximum of 6 coins per row and uniform spacing.
 
-        Returns:
-            list: A list of Coin objects positioned in a grid layout.
+        :param num_coins: Number of coins to create (determined by quantum device)
+        :type num_coins: int
+        :return: List of Coin objects positioned in a grid layout
+        :rtype: list
         """
         coins = []
         max_coins_per_row = 6
 
         # Calculate number of rows needed
-        num_rows = (self.NUM_COINS + max_coins_per_row - 1) // max_coins_per_row
+        num_rows = (num_coins + max_coins_per_row - 1) // max_coins_per_row
 
         # Calculate spacing for the coin section (right half of the window)
         coin_section_x_start = self.CIRCUIT_SECTION_WIDTH
         coin_section_width = self.COIN_SECTION_WIDTH
         coin_section_height = self.WINDOW_HEIGHT
 
-        for i in range(self.NUM_COINS):
+        for i in range(num_coins):
             # Calculate row and column for current coin
             row = i // max_coins_per_row
             col = i % max_coins_per_row
 
             # Calculate number of coins in current row
             coins_in_current_row = min(
-                max_coins_per_row, self.NUM_COINS - row * max_coins_per_row
+                max_coins_per_row, num_coins - row * max_coins_per_row
             )
 
             # Calculate horizontal position with uniform spacing
             horizontal_spacing = coin_section_width // (coins_in_current_row + 1)
             x = coin_section_x_start + horizontal_spacing * (col + 1)
 
-            # Calculate vertical position with uniform spacing
+            # Calculate vertical position with uniform spacing (offset by menu height)
             vertical_spacing = coin_section_height // (num_rows + 1)
-            y = vertical_spacing * (row + 1)
+            y = vertical_spacing * (row + 1) + self.MENU_HEIGHT
 
             coins.append(
                 Coin(
@@ -186,32 +220,130 @@ class CoinFlipApp:
             )
         return coins
 
+    def _handle_menu_click(self, pos):
+        """
+        Handle mouse clicks on menu items.
+
+        :param pos: Mouse position tuple (x, y)
+        :type pos: tuple
+        """
+        action = self.menu_bar.handle_click(pos)
+        if action:
+            logger.debug(f"Menu click at {pos}, action: {action}")
+            self._handle_menu_action(action)
+
+    def _handle_menu_action(self, action):
+        """
+        Handle menu action execution.
+
+        :param action: The action string to execute
+        :type action: str
+        """
+        if action == "exit":
+            self.running = False
+        elif action.startswith("device_"):
+            device_name = action.replace("device_", "").replace("_", "-").title()
+            logger.debug(f"Parsing device name: {device_name}")
+            if device_name == "Monarq":
+                device_name = "MonarQ"
+            elif device_name == "Monarq-Backup":
+                device_name = "MonarQ-Backup"
+
+            self._change_device(device_name)
+        elif action == "about":
+            self._show_about_dialog()
+        elif action == "increase_qubits":
+            if self.current_device == "Simulation":
+                self._change_num_qubits(1)
+        elif action == "decrease_qubits":
+            if self.current_device == "Simulation":
+                self._change_num_qubits(-1)
+
+    def _change_device(self, device_name):
+        """
+        Change the quantum device and update the application state.
+
+        :param device_name: Name of the device to switch to
+        :type device_name: str
+        """
+        self.current_device = device_name
+        self.menu_bar.set_current_device(device_name)  # Sync with menu bar
+        self.status_message = f"Switching to {device_name}..."
+
+        # Change device in quantum backend
+        try:
+            status = self.quantum_flipper.change_device(device_name)
+            self.status_message = status
+
+            # Regenerate circuit surface with new device
+            self._generate_circuit_surface()
+
+            # Recreate coins with new device's coin count
+            self.coins = self._create_coins(self.quantum_flipper.num_coins)
+
+        except Exception as e:
+            self.status_message = f"Error switching device: {str(e)}"
+
+    def _show_about_dialog(self):
+        """
+        Show information about the application.
+        """
+        self.status_message = (
+            "MonarQ Quantum Coin Flips - Powered by real quantum devices!"
+        )
+
+    def _change_num_qubits(self, delta):
+        """
+        Change the number of qubits (only in simulation mode).
+
+        :param delta: Change in number of qubits (+1 or -1)
+        :type delta: int
+        """
+        if self.current_device == "Simulation":
+            current_coins = self.quantum_flipper.num_coins
+            new_num_coins = max(1, min(24, current_coins + delta))
+            if new_num_coins != current_coins:
+                self.quantum_flipper.num_coins = new_num_coins
+
+                # Reinitialize device with new qubit count
+                status = self.quantum_flipper.initialize_device()
+                self.status_message = f"Changed to {new_num_coins} qubits - {status}"
+
+                # Regenerate circuit and coins
+                self._generate_circuit_surface()
+                self.coins = self._create_coins(self.quantum_flipper.num_coins)
+
+    def _handle_menu_hover(self, pos):
+        """
+        Handle mouse hover over menu items.
+
+        :param pos: Mouse position tuple (x, y)
+        :type pos: tuple
+        """
+        self.menu_bar.handle_hover(pos)
+
     def handle_events(self):
         """
         Process all pygame events.
 
-        Handles window close events and spacebar presses for coin flipping.
+        Handles window close events, menu interactions, and spacebar presses for coin flipping.
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
+            # Handle mouse clicks for menu
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left click
+                    self._handle_menu_click(event.pos)
+
+            # Handle mouse motion for menu highlighting
+            if event.type == pygame.MOUSEMOTION:
+                self._handle_menu_hover(event.pos)
+
             # Press SPACE to flip all coins and execute quantum circuit
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                # Only start if not already executing
-                if not self.quantum_executing:
-                    # Start coins bouncing
-                    for coin in self.coins:
-                        coin.flip()
-
-                    # Start quantum circuit execution in background thread
-                    self.quantum_executing = True
-                    self.quantum_results_ready = False
-                    self.quantum_results = None
-                    self.quantum_thread = threading.Thread(
-                        target=self._execute_quantum_circuit_thread, daemon=True
-                    )
-                    self.quantum_thread.start()
+                self._start_quantum_flip()
 
     def update(self):
         """
@@ -237,52 +369,63 @@ class CoinFlipApp:
         """
         Render all game objects to the screen.
 
-        Draws the background, circuit diagram, coins, status message, and hint text.
+        Draws the background, menu bar, circuit diagram, coins, status message, and hint text.
         """
         self.screen.fill(self.BACKGROUND_COLOR)
 
-        # Draw circuit section background
+        # Draw circuit section background (offset by menu height)
         circuit_bg_color = (45, 45, 55)
         pygame.draw.rect(
             self.screen,
             circuit_bg_color,
-            (0, 0, self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT),
+            (0, self.MENU_HEIGHT, self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT),
         )
 
-        # Draw separator line
+        # Draw separator line (offset by menu height)
         pygame.draw.line(
             self.screen,
             (100, 100, 120),
-            (self.CIRCUIT_SECTION_WIDTH, 0),
-            (self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT),
+            (self.CIRCUIT_SECTION_WIDTH, self.MENU_HEIGHT),
+            (self.CIRCUIT_SECTION_WIDTH, self.WINDOW_HEIGHT + self.MENU_HEIGHT),
             2,
         )
 
-        # Draw circuit diagram if available
+        # Draw circuit diagram if available (offset by menu height)
         if self.circuit_surface:
             circuit_rect = self.circuit_surface.get_rect(
-                center=(self.CIRCUIT_SECTION_WIDTH // 2, self.WINDOW_HEIGHT // 2)
+                center=(
+                    self.CIRCUIT_SECTION_WIDTH // 2,
+                    (self.WINDOW_HEIGHT // 2) + self.MENU_HEIGHT,
+                )
             )
             self.screen.blit(self.circuit_surface, circuit_rect)
 
-        # Draw status message
+        # Draw status message (offset by menu height)
         status_surf = self.status_font.render(
             self.status_message, True, (200, 200, 220)
         )
-        status_rect = status_surf.get_rect(center=(self.CIRCUIT_SECTION_WIDTH // 2, 20))
+        status_rect = status_surf.get_rect(
+            center=(self.CIRCUIT_SECTION_WIDTH // 2, 20 + self.MENU_HEIGHT)
+        )
         self.screen.blit(status_surf, status_rect)
 
         # Draw all coins
         for coin in self.coins:
             coin.draw(self.screen)
 
-        # Draw hint text
+        # Draw hint text (offset by menu height)
         hint = "Press SPACE to flip coins"
         hint_surf = self.hint_font.render(hint, True, (200, 200, 220))
         hint_rect = hint_surf.get_rect(
-            center=(self.CIRCUIT_SECTION_WIDTH // 2, self.WINDOW_HEIGHT - 20)
+            center=(
+                self.CIRCUIT_SECTION_WIDTH // 2,
+                self.WINDOW_HEIGHT + self.MENU_HEIGHT - 20,
+            )
         )
         self.screen.blit(hint_surf, hint_rect)
+
+        # Draw menu bar (always on top)
+        self.menu_bar.render(self.screen)
 
         pygame.display.flip()
 
