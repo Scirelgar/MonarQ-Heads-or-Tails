@@ -75,8 +75,8 @@ class QuantumCoinFlipper:
         """
         try:
             if self.current_device_name == "default.qubit":
-                # Initialize simulator device using circuit_qubits
-                circuit_qubits = getattr(self, "circuit_qubits", self.num_coins)
+                # Initialize simulator device using num_coins
+                circuit_qubits = self.num_coins
                 self.device = qml.device("default.qubit", wires=circuit_qubits)
             else:
                 # Initialize real quantum device using circuit_qubits
@@ -163,9 +163,10 @@ class QuantumCoinFlipper:
             result_states_list = list(self.circuit_func())
             execution_result = str(result_states_list[0])
             if execution_result is not None:
-                logger.info(f"Execution {execution + 1}/{num_executions} done. Result {execution_result}")
+                logger.info(
+                    f"Execution {execution + 1}/{num_executions} done. Result {execution_result}"
+                )
                 all_results.append(execution_result)
-
 
             # Add small delay between executions for real devices
             if self.current_device_name != "default.qubit" and num_executions > 1:
@@ -261,6 +262,7 @@ class QuantumCoinFlipper:
             # For simulation, keep current num_coins or use default
             if not hasattr(self, "num_coins") or self.num_coins is None:
                 self.num_coins = 6  # Default for simulation
+            logger.info(f"Simulation selected with {self.num_coins} coins.")
             self.circuit_qubits = self.num_coins  # Use all qubits in one circuit
             self.num_executions = 1
         # Clean up existing device components
@@ -272,6 +274,8 @@ class QuantumCoinFlipper:
         if self.circuit_fig is not None:
             plt.close(self.circuit_fig)
             self.circuit_fig = None
-        logger.info(f"Changing device to {self.current_device_name}. Num coins: {self.num_coins}, Executions: {self.num_executions}")
+        logger.info(
+            f"Changing device to {self.current_device_name}. Num coins: {self.num_coins}, Executions: {self.num_executions}"
+        )
         # Reinitialize with new device
         return self.initialize_device()

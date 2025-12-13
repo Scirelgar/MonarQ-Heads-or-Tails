@@ -15,7 +15,7 @@ from menu_bar import MenuBar
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 
 class CoinFlipApp:
@@ -314,7 +314,9 @@ class CoinFlipApp:
 
                 # Reinitialize device with new qubit count
                 status = self.quantum_flipper.initialize_device()
-                self.status_message = f"Changed to {new_num_coins} qubits - {status}"
+                self.status_message = (
+                    f"Changed to {self.quantum_flipper.num_coins} qubits - {status}"
+                )
 
                 # Regenerate circuit and coins
                 self._generate_circuit_surface()
@@ -351,6 +353,15 @@ class CoinFlipApp:
             # Press SPACE to flip all coins and execute quantum circuit
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self._start_quantum_flip()
+
+            if event.type == pygame.KEYDOWN:
+                if event.mod & pygame.KMOD_CTRL:
+                    if event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
+                        self._change_num_qubits(1)
+                    elif (
+                        event.key == pygame.K_MINUS or event.key == pygame.K_UNDERSCORE
+                    ):
+                        self._change_num_qubits(-1)
 
     def update(self):
         """
