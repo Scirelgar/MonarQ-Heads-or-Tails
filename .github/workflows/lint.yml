@@ -15,4 +15,4 @@ jobs:
         with:
           options: "--diff --check"
           jupyter: 'true'
-          src: "./doc ./src ./tests"
+          src: "./docs ./src ./tests"
