@@ -354,6 +354,9 @@ class CoinFlipApp:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self._start_quantum_flip()
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                pygame.display.toggle_fullscreen()
+
             if event.type == pygame.KEYDOWN:
                 if event.mod & pygame.KMOD_CTRL:
                     if event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
