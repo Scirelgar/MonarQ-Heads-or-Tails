@@ -2,6 +2,6 @@ pennylane~=0.43.1
 pennylane-calculquebec
 python-dotenv
 numpy
-pygame
+flet
 matplotlib
 pytest
