@@ -4,18 +4,17 @@ Main application module for the MonarQ Heads or Tails game.
 This module contains the CoinFlipApp class that controls the game logic.
 """
 
-import sys
-import io
-import threading
-from coin import Coin
+import flet as ft
+from flet import Row
+
+from view.button import GameButton
+from view.status import StatusText
 from view.window import AppWindow
-from quantum_backend import QuantumCoinFlipper
-from menu_bar import MenuBar
 
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
 class CoinFlipApp:
@@ -37,14 +36,30 @@ class CoinFlipApp:
     TEXT_COLOR = (10, 10, 10)
     FPS = 60
 
-    def __init__(self):
+    def __init__(self, page: ft.Page):
         """
         Initialize the coin flip application.
 
         Sets up app, creates the window, fonts, initializes quantum backend, and coins.
         The number of coins is determined by the quantum device.
         """
-        self.window = AppWindow(None)
+        self.window = AppWindow(page)
+        self.page = self.window.page
+        self.status_message = StatusText(
+            text="Press 'Start Quantum Flip' to begin!", size=24
+        )
+
+    def mount(self):
+        """
+        Composes the application components and starts the main loop.
+        """
+        self.page.add(Row())  # Placeholder for menu bar
+        self.page.add(self.status_message)
+        self.page.add(
+            GameButton(
+                text="Start Quantum Flip", on_click=lambda _: self._start_quantum_flip()
+            )
+        )
 
     def _generate_circuit_surface(self):
         """
@@ -70,7 +85,7 @@ class CoinFlipApp:
         Initiates coin animations and starts quantum circuit execution in a background thread.
         Only starts if not already executing to prevent multiple concurrent executions.
         """
-        pass
+        self.status_message.value = "Flipping coins... Waiting for quantum results!"
 
     def _create_coins(self, num_coins):
         """
@@ -179,15 +194,16 @@ class CoinFlipApp:
         pass
 
 
-def main():
+def main(page: ft.Page):
     """
     Entry point for the application.
 
-    Creates and runs the CoinFlipApp.
+    Creates and runs the CoinFlipApp following the canonical Flet pattern.
+    This function is called by ft.run() and receives the page instance.
     """
-    app = CoinFlipApp()
-    app.run()
+    app = CoinFlipApp(page)
+    app.mount()
 
 
 if __name__ == "__main__":
-    main()
+    ft.run(main)
