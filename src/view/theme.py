@@ -8,7 +8,8 @@ from flet import Colors
 class Theme(Enum):
     """Defines the color scheme and styling for the MonarQ Heads or Tails application."""
 
-    PRIMARY_COLOR = "#013D5B"  # Deep blue for backgrounds and main UI elements
-    ACCENT_COLOR = "#6095C1"  # Bright accent color for buttons and highlights
-    TEXT_COLOR_PRIMARY = "#052148"  # Dark blue for primary text
-    BACKGROUND_COLOR = "#F0F0F0"  # Same as primary for consistency
+    PRIMARY_COLOR = "#013D5B"
+    ACCENT_COLOR = "#6095C1"
+    TEXT_COLOR_PRIMARY = "#052148"
+    TEXT_COLOR_SECONDARY = "#041635"
+    BACKGROUND_COLOR = "#F0F0F0"

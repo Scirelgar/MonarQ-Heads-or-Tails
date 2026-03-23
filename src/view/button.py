@@ -5,12 +5,12 @@ from flet import Button
 from .theme import Theme
 
 
-class GameButton(Button):
+class DemoButton(Button):
     """Custom button class for the MonarQ Heads or Tails game."""
 
     def __init__(self, text: str, on_click=None):
         """
-        Initialize the GameButton with specific styling and behavior.
+        Initialize the DemoButton with specific styling and behavior.
 
         :param text: The text to display on the button.
         :param on_click: Optional callback function to execute when the button is clicked.

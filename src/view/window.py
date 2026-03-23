@@ -1,6 +1,8 @@
 """This module defines properties and methods for the app's window."""
 
 import flet as ft
+from flet import MainAxisAlignment
+
 from .theme import Theme
 
 
@@ -23,8 +25,10 @@ class AppWindow:
     def _configure_page(self):
         """Configure the page properties and add initial UI components."""
         self.page.title = "MonarQ Heads or Tails"
-        self.page.vertical_alignment = "center"
-        self.page.horizontal_alignment = "center"
+        self.page.vertical_alignment = MainAxisAlignment.START
+        self.page.horizontal_alignment = MainAxisAlignment.CENTER
         self.page.bgcolor = Theme.BACKGROUND_COLOR
         self.page.window.icon = "assets/monarq-icon.ico"
+        self.page.window.width = 1920
+        self.page.window.height = 1080
         self.page.update()

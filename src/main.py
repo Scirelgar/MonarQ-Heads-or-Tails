@@ -5,9 +5,10 @@ This module contains the CoinFlipApp class that controls the game logic.
 """
 
 import flet as ft
-from flet import Row
+from flet import Row, Column, Dropdown, MainAxisAlignment
 
-from view.button import GameButton
+from view.button import DemoButton
+from view.dropdown import DemoDropdown
 from view.status import StatusText
 from view.window import AppWindow
 
@@ -53,13 +54,33 @@ class CoinFlipApp:
         """
         Composes the application components and starts the main loop.
         """
-        self.page.add(Row())  # Placeholder for menu bar
-        self.page.add(self.status_message)
-        self.page.add(
-            GameButton(
-                text="Start Quantum Flip", on_click=lambda _: self._start_quantum_flip()
-            )
+        start_button = DemoButton(
+            text="Start Quantum Flip", on_click=self._start_quantum_flip
         )
+        device_picker = DemoDropdown(
+            label="Device",
+            options=[
+                ft.dropdown.Option("Simulation"),
+                ft.dropdown.Option("MonarQ"),
+                ft.dropdown.Option("MonarQ Backup"),
+                ft.dropdown.Option("Yukon"),
+            ],
+            on_select=lambda e: self._change_device(e.control.value),
+            value="Simulation",
+        )
+        menu_bar = Row(
+            [device_picker, start_button],
+            alignment=MainAxisAlignment.CENTER,
+        )
+        message_bar = Row([self.status_message], alignment=MainAxisAlignment.CENTER)
+        widgets = Row()
+        dashboard = Column(
+            [menu_bar, message_bar, widgets],
+            alignment=MainAxisAlignment.START,
+            spacing=20,
+        )
+
+        self.page.add(dashboard)
 
     def _generate_circuit_surface(self):
         """
@@ -126,7 +147,9 @@ class CoinFlipApp:
         :param device_name: Name of the device to switch to
         :type device_name: str
         """
-        pass
+        self.status_message.value = (
+            f"Switched to {device_name} device. Press 'Start Quantum Flip' to begin!"
+        )
 
     def _show_about_dialog(self):
         """
