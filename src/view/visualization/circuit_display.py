@@ -2,6 +2,7 @@
 
 import flet as ft
 from flet import Container, Image
+import struct
 
 
 class CircuitDisplay(Container):
@@ -14,7 +15,10 @@ class CircuitDisplay(Container):
         :param image_path: The file path to the circuit image to display.
         """
         super().__init__(
-            content=Image(src=image_path, fit=ft.BoxFit.FIT_HEIGHT),
+            content=Image(
+                src=image_path,
+                fit=ft.BoxFit.FIT_HEIGHT,
+                expand=True,
+            ),
             border_radius=10,
-            padding=10,
         )

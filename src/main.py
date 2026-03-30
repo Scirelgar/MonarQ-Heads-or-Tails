@@ -5,12 +5,14 @@ This module contains the CoinFlipApp class that controls the game logic.
 """
 
 import flet as ft
-from flet import Row, Column, MainAxisAlignment
+from flet import Row, Column, MainAxisAlignment, VerticalDivider
 
 from view.button import ActionTextButton
-from view.circuit_display import CircuitDisplay
+from view.visualization.coin_display import CoinDisplay
+from view.visualization.circuit_display import CircuitDisplay
 from view.dropdown import DemoDropdown
 from view.status import StatusText
+from view.visualization.visualization_panel import VisualizationPanel
 from view.window import AppWindow
 
 import logging
@@ -51,7 +53,7 @@ class CoinFlipApp:
             text="Press 'Start Quantum Flip' to begin!", size=24
         )
         self.circuit_surface = CircuitDisplay("assets/6qubit_circuit.png")
-        self.coins_surface = CoinDisplay(num_coins=6)
+        self.coins_surface = CoinDisplay()
 
     def mount(self):
         """
@@ -77,14 +79,15 @@ class CoinFlipApp:
         )
         message_bar = Row([self.status_message], alignment=MainAxisAlignment.CENTER)
 
-        widgets = Row(
-            [self.circuit_surface, self.coins_surface],
-            alignment=MainAxisAlignment.SPACE_AROUND,
+        visualization_panel = VisualizationPanel(
+            [self.circuit_surface, self.coins_surface]
         )
         dashboard = Column(
-            [menu_bar, message_bar, widgets],
+            [menu_bar, message_bar, visualization_panel],
             alignment=MainAxisAlignment.START,
-            spacing=20,
+            spacing=50,
+            expand=True,
+            margin=50,
         )
 
         self.page.add(dashboard)
@@ -114,7 +117,6 @@ class CoinFlipApp:
         Only starts if not already executing to prevent multiple concurrent executions.
         """
         self.status_message.value = "Flipping coins... Waiting for quantum results!"
-        self.coins_surface.start_waiting()
         self.page.update()
 
     def _create_coins(self, num_coins):

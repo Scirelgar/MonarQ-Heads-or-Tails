@@ -2,8 +2,6 @@
 
 from enum import Enum
 
-from flet import Colors
-
 
 class Theme(Enum):
     """Defines the color scheme and styling for the MonarQ Heads or Tails application."""
