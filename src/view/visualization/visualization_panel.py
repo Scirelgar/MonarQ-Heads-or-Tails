@@ -7,7 +7,7 @@ class VisualizationPanel(Container):
     def __init__(self, panel_elements: list[LayoutControl]):
         super().__init__(expand=True)
         self._min_left_width = 200.0
-        self._max_left_width = 700.0
+        self._max_left_width = 500.0
         self._left_width = self._min_left_width
         self._left_panel = panel_elements[0]
         self._left_panel.width = self._left_width
@@ -23,7 +23,7 @@ class VisualizationPanel(Container):
                 ),
                 panel_elements[1],
             ],
-            alignment=MainAxisAlignment.SPACE_AROUND,
+            spacing=10,
             expand=True,
         )
 
