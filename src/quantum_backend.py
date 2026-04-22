@@ -76,7 +76,7 @@ class QuantumCoinFlipper:
         try:
             if self.current_device_name == "default.qubit":
                 # Initialize simulator device using num_coins
-                circuit_qubits = self.num_coins
+                circuit_qubits = 6
                 self.device = qml.device("default.qubit", wires=circuit_qubits)
             else:
                 # Initialize real quantum device using circuit_qubits
@@ -260,11 +260,10 @@ class QuantumCoinFlipper:
             self.num_executions = 1  # Execute once
         elif device_name == "Simulation":
             # For simulation, keep current num_coins or use default
-            if not hasattr(self, "num_coins") or self.num_coins is None:
-                self.num_coins = 6  # Default for simulation
+            self.num_coins = 24  # Default for simulation
             logger.info(f"Simulation selected with {self.num_coins} coins.")
-            self.circuit_qubits = self.num_coins  # Use all qubits in one circuit
-            self.num_executions = 1
+            self.circuit_qubits = 6# Use all qubits in one circuit
+            self.num_executions = 4
         # Clean up existing device components
         self.client = None
         self.device = None
